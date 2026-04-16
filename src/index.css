@@ -1,1 +1,182 @@
 @import "tailwindcss";
+
+/* ============================================================
+   TEMA GLOBAL EAME — NEGRO · ROJO · PLOMO
+   Paleta idéntica al módulo Personal (referencia)
+   ============================================================ */
+
+:root {
+  --bg-base:      #0a0a0a;
+  --bg-panel:     #111111;
+  --bg-card:      #141414;
+  --bg-card-alt:  #1a1a1a;
+  --border:       #1f1f1f;
+  --border-soft:  #2a2a2a;
+  --red:          #cc0000;
+  --red-hover:    #ee2222;
+  --red-dim:      #991111;
+  --red-dark:     #881111;
+  --red-glow:     rgba(204,0,0,0.25);
+  --red-bg:       rgba(204,0,0,0.12);
+  --red-bg2:      rgba(204,0,0,0.06);
+  --gray-dk:      #374151;
+  --gray-md:      #4b5563;
+  --gray-lt:      #6b7280;
+  --gray-xl:      #9ca3af;
+  --white:        #ffffff;
+  --text:         #e5e7eb;
+  --text-dim:     #9ca3af;
+}
+
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body, #root {
+  background: var(--bg-base) !important;
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--red); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--red-hover); }
+
+/* ── Tablas dark ─────────────────────────────────── */
+table { border-collapse: collapse; width: 100%; }
+thead tr { background: #1a0000 !important; }
+thead th { color: var(--gray-xl) !important; font-size: 11px; letter-spacing: 0.05em; padding: 12px 16px; text-align: left; font-weight: 600; }
+tbody tr:nth-child(even) { background: var(--bg-card) !important; }
+tbody tr:nth-child(odd)  { background: var(--bg-panel) !important; }
+tbody tr:hover           { background: var(--red-bg2) !important; transition: background 0.15s; }
+td { color: var(--text) !important; padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+
+/* ── Inputs ──────────────────────────────────────── */
+input, select, textarea {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid var(--border-soft) !important;
+  color: var(--white) !important;
+  border-radius: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 10px var(--red-glow) !important;
+  outline: none !important;
+}
+input::placeholder, textarea::placeholder { color: var(--gray-dk) !important; }
+select option { background: #1a1a1a; color: var(--white); }
+
+/* ── Cards ───────────────────────────────────────── */
+.eame-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  transition: border-color 0.2s;
+}
+.eame-card:hover { border-color: rgba(204,0,0,0.25); }
+
+/* ── Botones ─────────────────────────────────────── */
+.btn-red {
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(204,0,0,0.35);
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-red:hover { background: var(--red-hover); transform: scale(1.03); }
+.btn-red:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ── Badges nivel ────────────────────────────────── */
+.badge-excelente { background: rgba(204,0,0,0.18); color: #ff4444; border: 1px solid #cc000044; }
+.badge-bueno     { background: rgba(75,85,99,0.25); color: #9ca3af; border: 1px solid #4b556344; }
+.badge-regular   { background: rgba(55,65,81,0.3);  color: #6b7280; border: 1px solid #37415144; }
+.badge-critico   { background: rgba(136,0,0,0.3);   color: #cc0000; border: 1px solid #88000066; }
+
+/* ── Recharts dark ───────────────────────────────── */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line { stroke: var(--border) !important; }
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--bg-card-alt) !important;
+  border: 1px solid rgba(204,0,0,0.3) !important;
+  border-radius: 8px !important;
+  color: var(--white) !important;
+}
+.recharts-legend-item-text { color: var(--gray-xl) !important; }
+.recharts-text { fill: var(--gray-md) !important; }
+
+/* ── Modal overlay ───────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(5px);
+}
+.modal-box {
+  background: var(--bg-panel);
+  border: 1px solid rgba(204,0,0,0.3);
+  border-radius: 16px;
+  box-shadow: 0 0 60px rgba(204,0,0,0.12), 0 25px 50px rgba(0,0,0,0.7);
+  padding: 24px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* ── Page header ─────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-icon {
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Animaciones ─────────────────────────────────── */
+@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+@keyframes pulse-red {
+  0%,100% { box-shadow: 0 0 8px rgba(204,0,0,0.3); }
+  50%      { box-shadow: 0 0 20px rgba(204,0,0,0.6); }
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+.animate-slideUp { animation: slideUp 0.4s ease-out both; }
+.animate-fadeIn  { animation: fadeIn  0.3s ease-out both; }
+
+/* ── Sección line ────────────────────────────────── */
+.section-line {
+  height: 1px;
+  background: linear-gradient(90deg, var(--red), transparent);
+  opacity: 0.45;
+  margin: 16px 0;
+}
+
+/* ── Nav active ──────────────────────────────────── */
+.nav-active {
+  background: rgba(204,0,0,0.15) !important;
+  color: #ff4444 !important;
+  border-left: 3px solid var(--red) !important;
+}

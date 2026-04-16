@@ -1,27 +1,87 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { User, Lock, Eye, EyeOff } from 'lucide-react'
-import fondoMilitar from '../assets/fondo-militar.png'
+import { User, Lock, Eye, EyeOff, Shield } from 'lucide-react'
+
+// PALETA: negro #0a0a0a, rojo #cc0000, plomo #4b5563 / #9ca3af
 
 export default function LoginPage() {
-  const [username, setUsername]     = useState('')
-  const [password, setPassword]     = useState('')
-  const [error, setError]           = useState('')
-  const [loading, setLoading]       = useState(false)
-  const [focusUser, setFocusUser]   = useState(false)
-  const [focusPass, setFocusPass]   = useState(false)
-  const [showPass, setShowPass]     = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError]       = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [focusUser, setFocusUser] = useState(false)
+  const [focusPass, setFocusPass] = useState(false)
+  const [showPass, setShowPass]   = useState(false)
   const { login } = useAuth()
   const navigate  = useNavigate()
+  const canvasRef = useRef(null)
+
+  // Partículas de fondo
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    canvas.width  = window.innerWidth
+    canvas.height = window.innerHeight
+
+    const particles = Array.from({ length: 60 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.5,
+      dx: (Math.random() - 0.5) * 0.4,
+      dy: (Math.random() - 0.5) * 0.4,
+      alpha: Math.random() * 0.4 + 0.1,
+    }))
+
+    let animId
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      particles.forEach(p => {
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(204,0,0,${p.alpha})`
+        ctx.fill()
+        p.x += p.dx; p.y += p.dy
+        if (p.x < 0 || p.x > canvas.width)  p.dx *= -1
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1
+      })
+      // Líneas entre partículas cercanas
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y)
+          if (dist < 100) {
+            ctx.beginPath()
+            ctx.strokeStyle = `rgba(204,0,0,${0.08 * (1 - dist / 100)})`
+            ctx.lineWidth = 0.5
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.stroke()
+          }
+        }
+      }
+      animId = requestAnimationFrame(draw)
+    }
+    draw()
+
+    const onResize = () => {
+      canvas.width  = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    window.addEventListener('resize', onResize)
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', onResize) }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      await login(username, password)
-      navigate('/dashboard')
+      const userData = await login(username, password)
+      // Redirigir según rol
+      const rol = (userData?.rol || '').toUpperCase()
+      if (rol === 'COMANDANTE') navigate('/comandante')
+      else navigate('/dashboard')
     } catch {
       setError('Usuario o contraseña incorrectos')
     } finally {
@@ -30,59 +90,71 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden" style={{ cursor: 'none' }}>
+    <div style={{ position: 'relative', minHeight: '100vh', background: '#0a0a0a', overflow: 'hidden' }}>
 
-      {/* Imagen de fondo limpia */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url(${fondoMilitar})`,
-          filter: 'brightness(0.35) saturate(0.9)',
-        }}
-      />
+      {/* Canvas fondo */}
+      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0 }} />
 
-      {/* Capa oscura para mejor legibilidad */}
-      <div className="absolute inset-0" style={{ background: 'rgba(0, 10, 2, 0.45)' }} />
-
-      <CustomCursor />
+      {/* Gradiente radial fondo */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 1,
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(204,0,0,0.08) 0%, transparent 65%)',
+      }} />
 
       {/* Tarjeta login */}
-      <div className="relative flex items-center justify-center min-h-screen" style={{ zIndex: 10 }}>
-        <div
-          className="w-full max-w-md mx-4 rounded-2xl p-8"
-          style={{
-            background: 'rgba(0, 20, 5, 0.75)',
-            backdropFilter: 'blur(18px)',
-            border: '1px solid rgba(74, 222, 128, 0.25)',
-            boxShadow: '0 0 60px rgba(22, 163, 74, 0.15), 0 25px 50px rgba(0,0,0,0.5)',
-          }}
-        >
+      <div style={{
+        position: 'relative', zIndex: 2,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100vh', padding: '20px',
+      }}>
+        <div style={{
+          width: '100%', maxWidth: 420,
+          background: 'rgba(15,15,15,0.92)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(204,0,0,0.3)',
+          borderRadius: 16,
+          padding: '36px 32px',
+          boxShadow: '0 0 60px rgba(204,0,0,0.15), 0 25px 50px rgba(0,0,0,0.6)',
+        }}>
+
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white tracking-wide">
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '50%',
+              border: '2px solid #cc0000',
+              background: 'rgba(204,0,0,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 14px',
+              boxShadow: '0 0 20px rgba(204,0,0,0.25)',
+            }}>
+              <Shield size={28} color="#cc0000" />
+            </div>
+            <h1 style={{
+              fontSize: 18, fontWeight: 700, color: 'white',
+              letterSpacing: '0.08em', marginBottom: 6,
+            }}>
               SISTEMA DE EVALUACIÓN
             </h1>
-            <div
-              className="h-px w-32 mx-auto my-3"
-              style={{ background: 'linear-gradient(to right, transparent, #4ade80, transparent)' }}
-            />
-            <p className="text-green-400 text-xs tracking-widest uppercase font-medium">
-              Unidad de Artes Marciales · Ejército de Bolivia
+            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, #cc0000, transparent)', margin: '8px auto', width: 120 }} />
+            <p style={{ fontSize: 11, color: '#cc0000', letterSpacing: '0.15em', marginBottom: 2 }}>
+              EAME · EJÉRCITO DE BOLIVIA
             </p>
-            <p className="text-gray-500 text-xs mt-1">CNL. Eulogio Ruiz Paz</p>
+            <p style={{ fontSize: 10, color: '#4b5563', letterSpacing: '0.05em' }}>
+              CNL. Eulogio Ruiz Paz
+            </p>
           </div>
 
           {/* Formulario */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-            {/* Campo Usuario */}
+            {/* Usuario */}
             <div>
-              <label className="block text-xs font-semibold text-green-400 mb-2 tracking-widest uppercase">
-                Usuario
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: '#cc0000', marginBottom: 6, letterSpacing: '0.15em' }}>
+                USUARIO
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: focusUser ? '#4ade80' : '#6b7280' }}>
-                  <User size={16} />
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}>
+                  <User size={15} color={focusUser ? '#cc0000' : '#4b5563'} />
                 </span>
                 <input
                   type="text"
@@ -92,25 +164,26 @@ export default function LoginPage() {
                   onBlur={() => setFocusUser(false)}
                   placeholder="Ingresa tu usuario"
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-lg text-white text-sm placeholder-gray-600 outline-none transition-all duration-300"
                   style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: focusUser ? '1px solid #4ade80' : '1px solid rgba(255,255,255,0.1)',
-                    boxShadow: focusUser ? '0 0 15px rgba(74,222,128,0.2)' : 'none',
-                    cursor: 'none',
+                    width: '100%', paddingLeft: 38, paddingRight: 14, paddingTop: 11, paddingBottom: 11,
+                    borderRadius: 10, fontSize: 13, color: 'white',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: focusUser ? '1px solid #cc0000' : '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: focusUser ? '0 0 12px rgba(204,0,0,0.2)' : 'none',
+                    outline: 'none', transition: 'all 0.2s',
                   }}
                 />
               </div>
             </div>
 
-            {/* Campo Contraseña */}
+            {/* Contraseña */}
             <div>
-              <label className="block text-xs font-semibold text-green-400 mb-2 tracking-widest uppercase">
-                Contraseña
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: '#cc0000', marginBottom: 6, letterSpacing: '0.15em' }}>
+                CONTRASEÑA
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: focusPass ? '#4ade80' : '#6b7280' }}>
-                  <Lock size={16} />
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}>
+                  <Lock size={15} color={focusPass ? '#cc0000' : '#4b5563'} />
                 </span>
                 <input
                   type={showPass ? 'text' : 'password'}
@@ -120,168 +193,85 @@ export default function LoginPage() {
                   onBlur={() => setFocusPass(false)}
                   placeholder="Ingresa tu contraseña"
                   required
-                  className="w-full pl-10 pr-10 py-3 rounded-lg text-white text-sm placeholder-gray-600 outline-none transition-all duration-300"
                   style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: focusPass ? '1px solid #4ade80' : '1px solid rgba(255,255,255,0.1)',
-                    boxShadow: focusPass ? '0 0 15px rgba(74,222,128,0.2)' : 'none',
-                    cursor: 'none',
+                    width: '100%', paddingLeft: 38, paddingRight: 42, paddingTop: 11, paddingBottom: 11,
+                    borderRadius: 10, fontSize: 13, color: 'white',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: focusPass ? '1px solid #cc0000' : '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: focusPass ? '0 0 12px rgba(204,0,0,0.2)' : 'none',
+                    outline: 'none', transition: 'all 0.2s',
                   }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors duration-200"
-                  style={{ color: showPass ? '#4ade80' : '#6b7280', cursor: 'none' }}
-                >
-                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                <button type="button" onClick={() => setShowPass(!showPass)}
+                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                  {showPass
+                    ? <EyeOff size={15} color={showPass ? '#cc0000' : '#4b5563'} />
+                    : <Eye size={15} color="#4b5563" />
+                  }
                 </button>
               </div>
             </div>
 
+            {/* Error */}
             {error && (
-              <div
-                className="text-sm rounded-lg px-4 py-3 text-red-300"
-                style={{
-                  background: 'rgba(239,68,68,0.1)',
-                  border: '1px solid rgba(239,68,68,0.3)',
-                }}
-              >
+              <div style={{
+                padding: '10px 14px', borderRadius: 10, fontSize: 12,
+                background: 'rgba(204,0,0,0.12)', border: '1px solid rgba(204,0,0,0.35)',
+                color: '#ff6666',
+              }}>
                 {error}
               </div>
             )}
 
-            <AnimatedButton loading={loading} />
+            {/* Botón */}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%', padding: '13px',
+                borderRadius: 10, fontSize: 13, fontWeight: 700,
+                letterSpacing: '0.15em', color: 'white',
+                background: loading
+                  ? 'rgba(100,0,0,0.5)'
+                  : 'linear-gradient(135deg, #cc0000, #990000)',
+                border: '1px solid #cc000066',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                boxShadow: loading ? 'none' : '0 0 20px rgba(204,0,0,0.35)',
+                transition: 'all 0.2s',
+                marginTop: 4,
+              }}
+            >
+              {loading ? (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <svg style={{ animation: 'spin 1s linear infinite', width: 16, height: 16 }} viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.25)" strokeWidth="4" />
+                    <path fill="white" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Verificando...
+                </span>
+              ) : 'INGRESAR AL SISTEMA'}
+            </button>
 
-            {/* Botón Volver al inicio */}
-            <div className="text-center mt-4">
-              <span
-                onClick={() => navigate('/')}
-                className="text-xs uppercase tracking-widest transition-all duration-200 hover:text-white"
-                style={{ 
-                  color: '#4ade80', 
-                  cursor: 'none', 
-                  textDecoration: 'none',
-                  borderBottom: '1px solid rgba(74, 222, 128, 0.3)'
-                }}
-              >
+            {/* Volver */}
+            <div style={{ textAlign: 'center' }}>
+              <span onClick={() => navigate('/')}
+                style={{ fontSize: 11, color: '#6b7280', cursor: 'pointer', letterSpacing: '0.05em' }}>
                 ← Volver al inicio
               </span>
             </div>
           </form>
 
-          <p className="text-center text-xs text-gray-600 mt-6">
-            Gestión Académica Operativa
+          <p style={{ textAlign: 'center', fontSize: 10, color: '#374151', marginTop: 20 }}>
+            Gestión Académica Operativa · UNIFRANZ 2026
           </p>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+        input::placeholder { color: #374151; }
+        input:-webkit-autofill { -webkit-box-shadow: 0 0 0 30px #111 inset !important; -webkit-text-fill-color: white !important; }
+      `}</style>
     </div>
-  )
-}
-
-function AnimatedButton({ loading }) {
-  const [hovered, setHovered] = useState(false)
-  const [pressed, setPressed] = useState(false)
-
-  return (
-    <button
-      type="submit"
-      disabled={loading}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setPressed(false) }}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      className="w-full font-bold py-3 rounded-lg text-sm tracking-widest uppercase transition-all duration-200 disabled:opacity-50"
-      style={{
-        background: hovered
-          ? 'linear-gradient(135deg, #16a34a, #4ade80)'
-          : 'linear-gradient(135deg, #166534, #16a34a)',
-        color: 'white',
-        transform: pressed ? 'scale(0.97)' : hovered ? 'scale(1.02)' : 'scale(1)',
-        boxShadow: hovered
-          ? '0 0 30px rgba(74,222,128,0.5), 0 8px 25px rgba(0,0,0,0.3)'
-          : '0 4px 15px rgba(0,0,0,0.3)',
-        cursor: 'none',
-        letterSpacing: '0.15em',
-      }}
-    >
-      {loading ? (
-        <span className="flex items-center justify-center gap-2">
-          <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4"/>
-            <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8H4z"/>
-          </svg>
-          Verificando...
-        </span>
-      ) : 'Ingresar al Sistema'}
-    </button>
-  )
-}
-
-function CustomCursor() {
-  const cursorRef = useRef(null)
-  const dotRef     = useRef(null)
-
-  useEffect(() => {
-    let x = 0, y = 0, dotX = 0, dotY = 0
-    const move = (e) => { x = e.clientX; y = e.clientY }
-    window.addEventListener('mousemove', move)
-
-    let raf
-    const loop = () => {
-      dotX += (x - dotX) * 0.12
-      dotY += (y - dotY) * 0.12
-      if (cursorRef.current)
-        cursorRef.current.style.transform = `translate(${x - 10}px, ${y - 10}px)`
-      if (dotRef.current)
-        dotRef.current.style.transform = `translate(${dotX - 3}px, ${dotY - 3}px)`
-      raf = requestAnimationFrame(loop)
-    }
-    raf = requestAnimationFrame(loop)
-
-    const onDown = () => {
-      if (cursorRef.current) {
-        cursorRef.current.style.width  = '35px'
-        cursorRef.current.style.height = '35px'
-        cursorRef.current.style.borderColor = '#86efac'
-      }
-    }
-    const onUp = () => {
-      if (cursorRef.current) {
-        cursorRef.current.style.width  = '20px'
-        cursorRef.current.style.height = '20px'
-        cursorRef.current.style.borderColor = '#4ade80'
-      }
-    }
-    window.addEventListener('mousedown', onDown)
-    window.addEventListener('mouseup',   onUp)
-
-    return () => {
-      window.removeEventListener('mousemove', move)
-      window.removeEventListener('mousedown', onDown)
-      window.removeEventListener('mouseup',   onUp)
-      cancelAnimationFrame(raf)
-    }
-  }, [])
-
-  return (
-    <>
-      <div
-        ref={cursorRef}
-        className="pointer-events-none fixed top-0 left-0 rounded-full"
-        style={{
-          width: '20px', height: '20px',
-          border: '1.5px solid #4ade80',
-          zIndex: 9999,
-          transition: 'width 0.15s, height 0.15s, border-color 0.15s',
-          mixBlendMode: 'difference',
-        }}
-      />
-      <div
-        ref={dotRef}
-        className="pointer-events-none fixed top-0 left-0 rounded-full"
-        style={{ width: '6px', height: '6px', background: '#4ade80', zIndex: 9999 }}
-      />
-    </>
   )
 }

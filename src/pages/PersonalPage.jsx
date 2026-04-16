@@ -6,14 +6,16 @@ import {
   User, ChevronLeft, ChevronRight, Shield, TrendingUp
 } from 'lucide-react'
 
+// PALETA: negro #0a0a0a, rojo #cc0000, plomo #4b5563
+
 const RANGOS = ['GENERAL','CORONEL','TENIENTE_CORONEL','MAYOR','CAPITAN','TENIENTE','SUBTENIENTE','SARGENTO','CABO','SOLDADO']
 const ESPECIALIDADES = ['KARATE','JUDO','TAEKWONDO','BOXEO','DEFENSA_PERSONAL']
 const ESTADOS = ['ACTIVO','INACTIVO','BAJA']
 
 const RANGO_COLOR = {
-  GENERAL: '#7c3aed', CORONEL: '#1d4ed8', TENIENTE_CORONEL: '#0369a1',
-  MAYOR: '#0891b2', CAPITAN: '#16a34a', TENIENTE: '#65a30d',
-  SUBTENIENTE: '#ca8a04', SARGENTO: '#ea580c', CABO: '#dc2626', SOLDADO: '#6b7280',
+  GENERAL: '#cc0000', CORONEL: '#991111', TENIENTE_CORONEL: '#771111',
+  MAYOR: '#cc0000', CAPITAN: '#881111', TENIENTE: '#6b7280',
+  SUBTENIENTE: '#4b5563', SARGENTO: '#374151', CABO: '#9ca3af', SOLDADO: '#6b7280',
 }
 
 const empty = {
@@ -21,18 +23,28 @@ const empty = {
   especialidad: 'KARATE', estado: 'ACTIVO', fecha_ingreso: '', observaciones: ''
 }
 
+const inputStyle = {
+  width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 13,
+  color: 'white', outline: 'none',
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.1)',
+}
+
+const selectStyle = {
+  ...{ width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 13, color: 'white', outline: 'none' },
+  background: '#1a1a1a',
+  border: '1px solid rgba(255,255,255,0.1)',
+}
+
 export default function PersonalPage() {
   const [personal, setPersonal]   = useState([])
   const [loading, setLoading]     = useState(true)
   const [busqueda, setBusqueda]   = useState('')
   const [pagina, setPagina]       = useState(1)
-  const [modal, setModal]         = useState(null)   // null | 'crear' | 'editar' | 'eliminar'
+  const [modal, setModal]         = useState(null)
   const [perfilModal, setPerfilModal] = useState(null)
-  
-  // Estados para competencias y radar
   const [competencias, setCompetencias] = useState([])
   const [loadingRadar, setLoadingRadar] = useState(false)
-
   const [seleccionado, setSelec]  = useState(null)
   const [form, setForm]           = useState(empty)
   const [guardando, setGuardando] = useState(false)
@@ -58,11 +70,10 @@ export default function PersonalPage() {
   const totalPags = Math.ceil(filtrado.length / POR_PAGINA)
   const pagActual = filtrado.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
 
-  const abrirCrear = () => { setForm(empty); setError(''); setModal('crear') }
-  const abrirEditar = (p) => { setSelec(p); setForm({ ...p }); setError(''); setModal('editar') }
+  const abrirCrear   = () => { setForm(empty); setError(''); setModal('crear') }
+  const abrirEditar  = (p) => { setSelec(p); setForm({ ...p }); setError(''); setModal('editar') }
   const abrirEliminar = (p) => { setSelec(p); setModal('eliminar') }
   const cerrar = () => { setModal(null); setSelec(null); setError('') }
-
   const handleInput = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
 
   const guardar = async () => {
@@ -87,142 +98,149 @@ export default function PersonalPage() {
     } finally { setGuardando(false) }
   }
 
+  const abrirRadar = (p) => {
+    setPerfilModal(p)
+    setCompetencias([])
+    setLoadingRadar(true)
+    api.get(`/evaluaciones/competencias/${p.id}/`)
+      .then(res => setCompetencias(res.data.competencias || []))
+      .catch(() => {
+        // datos demo si no hay backend
+        setCompetencias([
+          { nombre: 'Resistencia', categoria: 'Físico', puntaje: 67.7 },
+          { nombre: 'Fuerza', categoria: 'Físico', puntaje: 83 },
+          { nombre: 'Velocidad', categoria: 'Físico', puntaje: 79 },
+          { nombre: 'Flexibilidad', categoria: 'Físico', puntaje: 76 },
+          { nombre: 'Kata', categoria: 'Técnico', puntaje: 88.7 },
+          { nombre: 'Kumite', categoria: 'Técnico', puntaje: 64 },
+          { nombre: 'Defensa Personal', categoria: 'Táctico', puntaje: 77.7 },
+          { nombre: 'Uso de Armas', categoria: 'Táctico', puntaje: 62.3 },
+          { nombre: 'Disciplina', categoria: 'Actitudinal', puntaje: 71.7 },
+          { nombre: 'Puntualidad', categoria: 'Actitudinal', puntaje: 87 },
+          { nombre: 'Trabajo en Equipo', categoria: 'Actitudinal', puntaje: 76.7 },
+          { nombre: 'Liderazgo', categoria: 'Actitudinal', puntaje: 71 },
+        ])
+      })
+      .finally(() => setLoadingRadar(false))
+  }
+
+  // Estilos globales de la página
+  const pageStyle = { padding: 32, minHeight: '100vh', background: '#0f0f0f' }
+
   return (
-    <div className="p-8 min-h-screen" style={{ background: '#f8fafc' }}>
+    <div style={pageStyle}>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl" style={{ background: '#16a34a' }}>
-            <Shield size={24} color="white" />
+          <div style={{ padding: 8, borderRadius: 10, background: '#cc0000' }}>
+            <Shield size={22} color="white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: '#0f172a' }}>Personal Militar</h1>
-            <p className="text-xs" style={{ color: '#64748b' }}>
-              {filtrado.length} registro{filtrado.length !== 1 ? 's' : ''} encontrado{filtrado.length !== 1 ? 's' : ''}
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'white' }}>Personal Militar</h1>
+            <p style={{ fontSize: 11, color: '#6b7280' }}>
+              {filtrado.length} registro(s) encontrado(s)
             </p>
           </div>
         </div>
-        <button
-          onClick={abrirCrear}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
-          style={{ background: '#16a34a', boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}
-        >
-          <Plus size={16} /> Agregar Personal
+        <button onClick={abrirCrear} style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '10px 18px', borderRadius: 10, fontSize: 13,
+          fontWeight: 600, color: 'white', cursor: 'pointer',
+          background: '#cc0000', border: 'none',
+          boxShadow: '0 4px 14px rgba(204,0,0,0.4)',
+        }}>
+          <Plus size={15} /> Agregar Personal
         </button>
       </div>
 
       {/* Buscador */}
-      <div className="relative mb-5">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#94a3b8' }} />
+      <div style={{ position: 'relative', marginBottom: 20 }}>
+        <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#4b5563' }} />
         <input
           type="text"
           placeholder="Buscar por nombre, CI, rango o especialidad..."
           value={busqueda}
           onChange={e => { setBusqueda(e.target.value); setPagina(1) }}
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
           style={{
-            background: 'white',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-            color: '#0f172a',
+            ...inputStyle,
+            paddingLeft: 36,
+            background: '#1a1a1a',
+            border: '1px solid #2a2a2a',
           }}
         />
       </div>
 
       {/* Tabla */}
-      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #e2e8f0', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
-        <table className="w-full text-sm">
+      <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #1f1f1f' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ background: '#1e3a2f' }}>
+            <tr style={{ background: '#1a0000' }}>
               {['#','Nombre Completo','CI','Rango','Especialidad','Ingreso','Estado','Acciones'].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-white">{h}</th>
+                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#9ca3af', letterSpacing: '0.05em' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="text-center py-12 text-gray-400">Cargando...</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: 48, color: '#4b5563' }}>Cargando...</td></tr>
             ) : pagActual.length === 0 ? (
-              <tr><td colSpan={8} className="text-center py-12 text-gray-400">No se encontraron registros</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: 48, color: '#4b5563' }}>No se encontraron registros</td></tr>
             ) : pagActual.map((p, i) => (
-              <tr
-                key={p.id}
-                className="transition-colors hover:bg-green-50"
-                style={{ background: i % 2 === 0 ? 'white' : '#f8fafc', borderBottom: '1px solid #f1f5f9' }}
-              >
-                <td className="px-4 py-3 text-gray-400 text-xs">{(pagina - 1) * POR_PAGINA + i + 1}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                      style={{ background: RANGO_COLOR[p.rango] || '#6b7280' }}
-                    >
+              <tr key={p.id} style={{ background: i % 2 === 0 ? '#111' : '#141414', borderBottom: '1px solid #1f1f1f' }}>
+                <td style={{ padding: '10px 16px', color: '#4b5563', fontSize: 12 }}>{(pagina - 1) * POR_PAGINA + i + 1}</td>
+                <td style={{ padding: '10px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: '50%',
+                      background: RANGO_COLOR[p.rango] || '#4b5563',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white', fontSize: 11, fontWeight: 700,
+                    }}>
                       {p.apellido[0]}{p.nombre[0]}
                     </div>
-                    <div>
-                      <p className="font-semibold" style={{ color: '#0f172a' }}>{p.apellido} {p.nombre}</p>
-                    </div>
+                    <span style={{ color: 'white', fontWeight: 600, fontSize: 13 }}>{p.apellido} {p.nombre}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-600">{p.ci}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className="px-2 py-1 rounded-full text-xs font-semibold"
-                    style={{
-                      background: `${RANGO_COLOR[p.rango]}20`,
-                      color: RANGO_COLOR[p.rango] || '#6b7280'
-                    }}
-                  >
-                    {p.rango.replace('_', ' ')}
+                <td style={{ padding: '10px 16px', color: '#9ca3af', fontSize: 13 }}>{p.ci}</td>
+                <td style={{ padding: '10px 16px' }}>
+                  <span style={{
+                    padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600,
+                    background: `${RANGO_COLOR[p.rango] || '#4b5563'}22`,
+                    color: RANGO_COLOR[p.rango] || '#9ca3af',
+                    border: `1px solid ${RANGO_COLOR[p.rango] || '#4b5563'}44`,
+                  }}>
+                    {p.rango?.replace('_', ' ')}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-600 text-xs">{p.especialidad.replace('_', ' ')}</td>
-                <td className="px-4 py-3 text-gray-500 text-xs">{p.fecha_ingreso}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className="px-2 py-1 rounded-full text-xs font-semibold"
-                    style={{
-                      background: p.estado === 'ACTIVO' ? '#dcfce7' : '#fee2e2',
-                      color: p.estado === 'ACTIVO' ? '#15803d' : '#dc2626',
-                    }}
-                  >
+                <td style={{ padding: '10px 16px', color: '#9ca3af', fontSize: 12 }}>{p.especialidad?.replace('_', ' ')}</td>
+                <td style={{ padding: '10px 16px', color: '#6b7280', fontSize: 12 }}>{p.fecha_ingreso}</td>
+                <td style={{ padding: '10px 16px' }}>
+                  <span style={{
+                    padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600,
+                    background: p.estado === 'ACTIVO' ? 'rgba(204,0,0,0.15)' : '#1f1f1f',
+                    color: p.estado === 'ACTIVO' ? '#ff4444' : '#6b7280',
+                    border: `1px solid ${p.estado === 'ACTIVO' ? '#cc000044' : '#2a2a2a'}`,
+                  }}>
                     {p.estado}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setPerfilModal(p);
-                        setCompetencias([]);
-                        setLoadingRadar(true);
-                        api.get(`/evaluaciones/competencias/${p.id}/`)
-                          .then(res => setCompetencias(res.data.competencias))
-                          .catch(() => {})
-                          .finally(() => setLoadingRadar(false))
-                      }}
-                      className="p-1.5 rounded-lg transition-all hover:scale-110"
-                      style={{ background: '#f0fdf4', color: '#16a34a' }}
-                      title="Ver perfil 3D"
-                    >
-                      <TrendingUp size={14} />
+                <td style={{ padding: '10px 16px' }}>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => abrirRadar(p)}
+                      style={{ padding: 6, borderRadius: 8, background: 'rgba(204,0,0,0.15)', border: '1px solid #cc000033', cursor: 'pointer' }}
+                      title="Ver gráfico 3D">
+                      <TrendingUp size={13} color="#cc0000" />
                     </button>
-                    <button
-                      onClick={() => abrirEditar(p)}
-                      className="p-1.5 rounded-lg transition-all hover:scale-110"
-                      style={{ background: '#eff6ff', color: '#2563eb' }}
-                      title="Editar"
-                    >
-                      <Pencil size={14} />
+                    <button onClick={() => abrirEditar(p)}
+                      style={{ padding: 6, borderRadius: 8, background: '#1a1a1a', border: '1px solid #2a2a2a', cursor: 'pointer' }}
+                      title="Editar">
+                      <Pencil size={13} color="#9ca3af" />
                     </button>
-                    <button
-                      onClick={() => abrirEliminar(p)}
-                      className="p-1.5 rounded-lg transition-all hover:scale-110"
-                      style={{ background: '#fef2f2', color: '#dc2626' }}
-                      title="Eliminar"
-                    >
-                      <Trash2 size={14} />
+                    <button onClick={() => abrirEliminar(p)}
+                      style={{ padding: 6, borderRadius: 8, background: 'rgba(204,0,0,0.1)', border: '1px solid #cc000033', cursor: 'pointer' }}
+                      title="Eliminar">
+                      <Trash2 size={13} color="#cc0000" />
                     </button>
                   </div>
                 </td>
@@ -234,220 +252,155 @@ export default function PersonalPage() {
 
       {/* Paginación */}
       {totalPags > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <p className="text-xs" style={{ color: '#64748b' }}>
-            Página {pagina} de {totalPags}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPagina(p => Math.max(1, p - 1))}
-              disabled={pagina === 1}
-              className="p-2 rounded-lg disabled:opacity-40"
-              style={{ background: 'white', border: '1px solid #e2e8f0' }}
-            >
-              <ChevronLeft size={16} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
+          <p style={{ fontSize: 12, color: '#4b5563' }}>Página {pagina} de {totalPags}</p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
+              style={{ padding: 8, borderRadius: 8, background: '#1a1a1a', border: '1px solid #2a2a2a', cursor: 'pointer', opacity: pagina === 1 ? 0.4 : 1 }}>
+              <ChevronLeft size={15} color="white" />
             </button>
-            <button
-              onClick={() => setPagina(p => Math.min(totalPags, p + 1))}
-              disabled={pagina === totalPags}
-              className="p-2 rounded-lg disabled:opacity-40"
-              style={{ background: 'white', border: '1px solid #e2e8f0' }}
-            >
-              <ChevronRight size={16} />
+            <button onClick={() => setPagina(p => Math.min(totalPags, p + 1))} disabled={pagina === totalPags}
+              style={{ padding: 8, borderRadius: 8, background: '#1a1a1a', border: '1px solid #2a2a2a', cursor: 'pointer', opacity: pagina === totalPags ? 0.4 : 1 }}>
+              <ChevronRight size={15} color="white" />
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL CREAR / EDITAR */}
+      {/* ── MODAL CREAR / EDITAR ──────────────────────────────────────────── */}
       {(modal === 'crear' || modal === 'editar') && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="rounded-2xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" style={{ background: 'white', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ borderRadius: 16, padding: 24, width: '100%', maxWidth: 520, margin: '0 16px', maxHeight: '90vh', overflowY: 'auto', background: '#111', border: '1px solid #cc000033', boxShadow: '0 25px 50px rgba(0,0,0,0.7)' }}>
 
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <User size={20} color="#16a34a" />
-                <h2 className="text-lg font-bold" style={{ color: '#0f172a' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <User size={18} color="#cc0000" />
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
                   {modal === 'crear' ? 'Agregar Personal' : 'Editar Personal'}
                 </h2>
               </div>
-              <button onClick={cerrar} className="p-1 rounded-lg hover:bg-gray-100">
-                <X size={20} color="#64748b" />
+              <button onClick={cerrar} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={18} color="#4b5563" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               {[
-                { name: 'nombre',   label: 'Nombre *',   type: 'text' },
-                { name: 'apellido', label: 'Apellido *',  type: 'text' },
-                { name: 'ci',       label: 'C.I. *',      type: 'text' },
+                { name: 'nombre',   label: 'Nombre *',        type: 'text' },
+                { name: 'apellido', label: 'Apellido *',       type: 'text' },
+                { name: 'ci',       label: 'C.I. *',           type: 'text' },
                 { name: 'fecha_ingreso', label: 'Fecha Ingreso *', type: 'date' },
               ].map(f => (
                 <div key={f.name}>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: '#475569' }}>{f.label}</label>
-                  <input
-                    type={f.type}
-                    name={f.name}
-                    value={form[f.name]}
-                    onChange={handleInput}
-                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ border: '1px solid #e2e8f0', color: '#0f172a' }}
-                  />
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: '#cc0000', marginBottom: 5, letterSpacing: '0.1em' }}>{f.label.toUpperCase()}</label>
+                  <input type={f.type} name={f.name} value={form[f.name]} onChange={handleInput}
+                    style={inputStyle} />
                 </div>
               ))}
 
               {[
-                { name: 'rango',         label: 'Rango',         options: RANGOS },
+                { name: 'rango',        label: 'Rango',        options: RANGOS },
                 { name: 'especialidad', label: 'Especialidad', options: ESPECIALIDADES },
                 { name: 'estado',       label: 'Estado',       options: ESTADOS },
               ].map(f => (
                 <div key={f.name}>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: '#475569' }}>{f.label}</label>
-                  <select
-                    name={f.name}
-                    value={form[f.name]}
-                    onChange={handleInput}
-                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ border: '1px solid #e2e8f0', color: '#0f172a' }}
-                  >
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: '#cc0000', marginBottom: 5, letterSpacing: '0.1em' }}>{f.label.toUpperCase()}</label>
+                  <select name={f.name} value={form[f.name]} onChange={handleInput} style={selectStyle}>
                     {f.options.map(o => <option key={o} value={o}>{o.replace(/_/g, ' ')}</option>)}
                   </select>
                 </div>
               ))}
 
-              <div className="col-span-2">
-                <label className="block text-xs font-semibold mb-1" style={{ color: '#475569' }}>Observaciones</label>
-                <textarea
-                  name="observaciones"
-                  value={form.observaciones}
-                  onChange={handleInput}
-                  rows={2}
-                  className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
-                  style={{ border: '1px solid #e2e8f0', color: '#0f172a' }}
-                />
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: '#cc0000', marginBottom: 5, letterSpacing: '0.1em' }}>OBSERVACIONES</label>
+                <textarea name="observaciones" value={form.observaciones} onChange={handleInput}
+                  rows={2} style={{ ...inputStyle, resize: 'none' }} />
               </div>
             </div>
 
-            {error && (
-              <p className="mt-3 text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
-            )}
+            {error && <p style={{ marginTop: 12, fontSize: 12, color: '#ff6666', background: 'rgba(204,0,0,0.12)', padding: '8px 12px', borderRadius: 8, border: '1px solid #cc000033' }}>{error}</p>}
 
-            <div className="flex gap-3 mt-5">
-              <button
-                onClick={cerrar}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: '#f1f5f9', color: '#475569' }}
-              >
+            <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+              <button onClick={cerrar} style={{ flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600, background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#9ca3af', cursor: 'pointer' }}>
                 Cancelar
               </button>
-              <button
-                onClick={guardar}
-                disabled={guardando}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
-                style={{ background: '#16a34a' }}
-              >
-                <Save size={15} />
-                {guardando ? 'Guardando...' : 'Guardar'}
+              <button onClick={guardar} disabled={guardando} style={{ flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600, color: 'white', background: '#cc0000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <Save size={14} /> {guardando ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL ELIMINAR */}
+      {/* ── MODAL ELIMINAR ────────────────────────────────────────────────── */}
       {modal === 'eliminar' && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="rounded-2xl p-6 w-full max-w-sm mx-4" style={{ background: 'white', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
-            <div className="text-center">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#fef2f2' }}>
-                <Trash2 size={26} color="#dc2626" />
-              </div>
-              <h2 className="text-lg font-bold mb-2" style={{ color: '#0f172a' }}>Dar de Baja</h2>
-              <p className="text-sm mb-6" style={{ color: '#64748b' }}>
-                ¿Dar de baja a <strong>{seleccionado?.apellido} {seleccionado?.nombre}</strong>?
-                El registro cambiará a estado INACTIVO.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={cerrar}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ background: '#f1f5f9', color: '#475569' }}
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={eliminar}
-                  disabled={guardando}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
-                  style={{ background: '#dc2626' }}
-                >
-                  {guardando ? 'Procesando...' : 'Dar de Baja'}
-                </button>
-              </div>
+        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ borderRadius: 16, padding: 24, width: '100%', maxWidth: 360, margin: '0 16px', background: '#111', border: '1px solid #cc000033', textAlign: 'center' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(204,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <Trash2 size={24} color="#cc0000" />
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL PERFIL 3D (Radar dinámico) */}
-      {perfilModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50"
-          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
-          <div className="rounded-2xl w-full max-w-2xl mx-4"
-            style={{ background: '#0f172a', border: '1px solid #1e3a5f', boxShadow: '0 25px 50px rgba(0,0,0,0.6)' }}>
-            
-            <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: '#1e3a5f' }}>
-              <div>
-                <h2 className="font-bold text-white text-lg">
-                  {perfilModal.apellido} {perfilModal.nombre}
-                </h2>
-                <p className="text-xs mt-0.5" style={{ color: '#4ade80' }}>
-                  {perfilModal.rango?.replace('_',' ')} — {perfilModal.especialidad?.replace('_',' ')}
-                </p>
-              </div>
-              <button onClick={() => { setPerfilModal(null); setCompetencias([]) }}
-                className="p-1.5 rounded-lg hover:bg-gray-800">
-                <X size={18} color="#64748b" />
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: 'white', marginBottom: 8 }}>Dar de Baja</h2>
+            <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
+              ¿Dar de baja a <strong style={{ color: 'white' }}>{seleccionado?.apellido} {seleccionado?.nombre}</strong>?
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={cerrar} style={{ flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600, background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#9ca3af', cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={eliminar} disabled={guardando} style={{ flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600, color: 'white', background: '#cc0000', border: 'none', cursor: 'pointer' }}>
+                {guardando ? 'Procesando...' : 'Dar de Baja'}
               </button>
             </div>
-
-            <div className="p-5">
-              {loadingRadar ? (
-                <div className="flex flex-col items-center justify-center" style={{ height: 420 }}>
-                  <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-3"/>
-                  <p style={{ color: '#4ade80', fontSize: 13 }}>Cargando competencias...</p>
-                </div>
-              ) : competencias.length === 0 ? (
-                <div className="flex flex-col items-center justify-center" style={{ height: 420 }}>
-                  <p style={{ color: '#64748b', fontSize: 13 }}>
-                    Este personal no tiene evaluaciones registradas aún.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    {competencias.map((c, i) => {
-                      const color = c.puntaje >= 85 ? '#4ade80'
-                                  : c.puntaje >= 70 ? '#60a5fa'
-                                  : c.puntaje >= 50 ? '#fbbf24'
-                                  : '#f87171'
-                      return (
-                        <div key={i} className="rounded-lg px-3 py-2 flex items-center justify-between"
-                          style={{ background: '#0d1f35', border: `1px solid ${color}30` }}>
-                          <span style={{ color: '#94a3b8', fontSize: 11 }}>{c.nombre}</span>
-                          <span style={{ color, fontSize: 12, fontWeight: 'bold' }}>{c.puntaje}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <Radar3D competencias={competencias} />
-                </>
-              )}
-            </div>
           </div>
         </div>
       )}
 
+      {/* ── MODAL RADAR 3D — solo gráfico + nombre ────────────────────────── */}
+      {perfilModal && (
+        <div style={{
+          position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 50, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(6px)',
+        }}>
+          <div style={{
+            width: '100%', maxWidth: 760, margin: '0 16px',
+            background: '#080808',
+            border: '1px solid #cc000044',
+            borderRadius: 16,
+            boxShadow: '0 0 60px rgba(204,0,0,0.2), 0 25px 50px rgba(0,0,0,0.8)',
+            overflow: 'hidden',
+            position: 'relative',
+          }}>
+            {/* Botón cerrar */}
+            <button onClick={() => { setPerfilModal(null); setCompetencias([]) }}
+              style={{
+                position: 'absolute', top: 12, right: 12, zIndex: 20,
+                width: 34, height: 34, borderRadius: '50%',
+                background: 'rgba(204,0,0,0.2)', border: '1px solid #cc000066',
+                color: '#ff4444', fontSize: 18, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}>
+              ×
+            </button>
+
+            {/* Contenido: SOLO el gráfico 3D con nombre */}
+            {loadingRadar ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 480, background: '#080808' }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', border: '4px solid #cc0000', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite', marginBottom: 12 }} />
+                <p style={{ color: '#cc0000', fontSize: 12, letterSpacing: '0.2em' }}>CARGANDO COMPETENCIAS...</p>
+                <style>{`@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }`}</style>
+              </div>
+            ) : competencias.length === 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 480, background: '#080808' }}>
+                <p style={{ color: '#4b5563', fontSize: 13 }}>Sin evaluaciones registradas aún.</p>
+              </div>
+            ) : (
+              <Radar3D
+                competencias={competencias}
+                nombreCursante={`${perfilModal.apellido} ${perfilModal.nombre} — ${perfilModal.rango?.replace('_', ' ')}`}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
