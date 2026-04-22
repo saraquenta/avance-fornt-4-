@@ -1,3 +1,4 @@
+// src/App.jsx — SPRINT 4 actualizado
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -7,7 +8,7 @@ import NavbarComandante from './components/NavbarComandante'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 
-// Páginas Admin
+// Páginas Admin (sprints anteriores)
 import DashboardPage    from './pages/DashboardPage'
 import PersonalPage     from './pages/PersonalPage'
 import DisciplinasPage  from './pages/DisciplinasPage'
@@ -17,12 +18,16 @@ import BajasPage        from './pages/BajasPage'
 import ActividadesPage  from './pages/ActividadesPage'
 import ReportesPage     from './pages/ReportesPage'
 
-// Páginas Comandante (módulos independientes)
+// Páginas Comandante
 import ComandanteDashboard    from './pages/ComandanteDashboard'
 import ComandanteCursantes    from './pages/ComandanteCursantes'
 import ComandanteEvaluaciones from './pages/ComandanteEvaluaciones'
 import ComandantePredicciones from './pages/ComandantePredicciones'
 import ComandanteDiagnosticos from './pages/ComandanteDiagnosticos'
+
+// ── SPRINT 4: Nuevas páginas ──────────────────────────────────────────────
+import GraficosPage       from './pages/GraficosPage'
+import BibliotecaTecnicas from './pages/BibliotecaTecnicas'
 
 function Layout({ children }) {
   return (
@@ -91,6 +96,10 @@ export default function App() {
             <Route path="/bajas"        element={<AdminRoute><BajasPage /></AdminRoute>} />
             <Route path="/actividades"  element={<AdminRoute><ActividadesPage /></AdminRoute>} />
             <Route path="/reportes"     element={<AdminRoute><ReportesPage /></AdminRoute>} />
+
+            {/* ── SPRINT 4: Nuevas rutas ─────────────────────────────────── */}
+            <Route path="/graficos"   element={<AdminRoute><GraficosPage /></AdminRoute>} />
+            <Route path="/biblioteca" element={<AdminRoute><BibliotecaTecnicas /></AdminRoute>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

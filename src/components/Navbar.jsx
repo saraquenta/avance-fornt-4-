@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext'
 import {
   LayoutDashboard, Users, ClipboardList,
   FileBarChart, LogOut, Shield, BookOpen,
-  Award, UserMinus, Activity
+  Award, UserMinus, Activity,
+  BarChart2, Film,  // ← Sprint 4
 } from 'lucide-react'
 
 const links = [
@@ -15,9 +16,10 @@ const links = [
   { to: '/bajas',        label: 'Bajas',        icon: UserMinus       },
   { to: '/actividades',  label: 'Actividades',  icon: Activity        },
   { to: '/reportes',     label: 'Reportes',     icon: FileBarChart    },
+  // ── Sprint 4 ────────────────────────────────────────────────────────
+  { to: '/graficos',   label: 'Gráficos S4',  icon: BarChart2, badge: 'S4' },
+  { to: '/biblioteca', label: 'Biblioteca',   icon: Film,      badge: 'S4' },
 ]
-
-// PALETA: Negro #0a0a0a, Rojo #cc0000 / #991b1b, Plomo #4b5563 / #9ca3af
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -54,8 +56,8 @@ export default function Navbar() {
       </div>
 
       {/* Links */}
-      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-        {links.map(({ to, label, icon: Icon }) => {
+      <nav className="flex-1 p-3 overflow-y-auto" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {links.map(({ to, label, icon: Icon, badge }) => {
           const active = location.pathname === to
           return (
             <Link
@@ -67,16 +69,30 @@ export default function Navbar() {
                 color: active ? '#ff4444' : 'rgba(255,255,255,0.5)',
                 borderLeft: active ? '3px solid #cc0000' : '3px solid transparent',
                 letterSpacing: '0.03em',
+                textDecoration: 'none',
+                position: 'relative',
               }}
             >
               <Icon size={15} color={active ? '#cc0000' : undefined} />
               {label}
+              {badge && (
+                <span style={{
+                  marginLeft: 'auto',
+                  background: active ? '#cc0000' : '#1a0000',
+                  color: active ? '#fff' : '#cc0000',
+                  fontSize: 8, padding: '1px 5px',
+                  borderRadius: 8, fontWeight: 700,
+                  border: '1px solid #cc000055',
+                }}>
+                  {badge}
+                </span>
+              )}
             </Link>
           )
         })}
       </nav>
 
-      {/* Línea */}
+      {/* Separador */}
       <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, #cc0000, transparent)', margin: '0 16px', opacity: 0.4 }} />
 
       {/* Usuario */}
@@ -98,10 +114,11 @@ export default function Navbar() {
             background: 'rgba(204,0,0,0.25)',
             border: '1px solid #cc000066',
             color: '#ff6666',
-            letterSpacing: '0.1em',
+            cursor: 'pointer',
           }}
         >
-          <LogOut size={13} /> Cerrar Sesión
+          <LogOut size={13} />
+          CERRAR SESIÓN
         </button>
       </div>
     </aside>
