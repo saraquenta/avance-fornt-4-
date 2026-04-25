@@ -1,13 +1,3 @@
-// src/components/AnimacionesSVG.jsx
-// ============================================================
-// SPRINT 4 — GRÁFICO 3: Animaciones SVG/CSS controladas por eventos
-// 4 animaciones:
-//   1. Barra circular SVG (se llena al cargar)
-//   2. Tarjeta alerta pulse CSS (puntaje < 60)
-//   3. Flip card 3D CSS (resumen / detalle)
-//   4. Contador numérico animado desde 0
-// Transiciones de página con Framer Motion
-// ============================================================
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
